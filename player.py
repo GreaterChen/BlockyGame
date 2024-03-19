@@ -52,8 +52,33 @@ def create_players(num_human: int, num_random: int, smart_players: list[int]) \
     Each player is assigned a random goal.
     """
     # TODO: Implement this function
-    goals = generate_goals(1)  # FIXME
-    return [HumanPlayer(0, goals[0])]  # FIXME
+    # goals = generate_goals(1)  # FIXME
+    # return [HumanPlayer(0, goals[0])]  # FIXME
+
+    total_players = num_human + num_random + len(smart_players)
+    goals = generate_goals(total_players)  # 生成足够多的随机目标
+    players = []
+
+    player_id = 0
+
+    # 创建 HumanPlayer 对象
+    for _ in range(num_human):
+        players.append(HumanPlayer(player_id, goals.pop(0)))
+        player_id += 1
+
+    # # 创建 RandomPlayer 对象
+    # for _ in range(num_random):
+    #     # 假设 RandomPlayer 已经定义，且有类似于 HumanPlayer 的初始化方法
+    #     players.append(RandomPlayer(player_id, goals.pop(0)))
+    #     player_id += 1
+    #
+    # # 创建 SmartPlayer 对象
+    # for difficulty in smart_players:
+    #     # 假设 SmartPlayer 已经定义，且可以接受一个难度级别作为参数
+    #     players.append(SmartPlayer(player_id, goals.pop(0), difficulty))
+    #     player_id += 1
+
+    return players
 
 
 def _get_block(block: Block, location: tuple[int, int], level: int) -> \
@@ -75,6 +100,28 @@ def _get_block(block: Block, location: tuple[int, int], level: int) -> \
         - block.level <= level <= block.max_depth
     """
     # TODO: Implement this function
+    # 检查给定的位置是否在当前 Block 的范围内
+    x, y = location
+    top_left_x, top_left_y = block.position
+    bottom_right_x = top_left_x + block.size
+    bottom_right_y = top_left_y + block.size
+
+    # 检查位置是否在当前 Block 内部或顶部/左侧边缘
+    if not (top_left_x <= x < bottom_right_x and top_left_y <= y < bottom_right_y):
+        return None  # 如果位置不在当前 Block 内，则返回 None
+
+    # 如果当前 Block 是所需级别或已经是最底层 Block，则返回当前 Block
+    if block.level == level or not block.children:
+        return block
+
+    # 递归检查哪个子 Block 包含给定位置
+    for child in block.children:
+        result = _get_block(child, location, level)
+        if result is not None:
+            return result
+
+    # 如果没有找到符合条件的子 Block（理论上不应该发生），返回 None
+    return None
 
 
 class Player:
