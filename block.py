@@ -283,6 +283,27 @@ class Block:
         True
         """
         # TODO: Implement this method
+        if self.children or self.level >= self.max_depth:
+            return False  # 如果已经有子方块或者达到最大深度，则不进行 smash 操作
+
+        self.colour = None  # 清除当前方块的颜色
+
+        child_position = self.children_positions()
+
+        for i in range(4):  # 为当前方块生成四个子方块
+            child_size = self.child_size()
+            child_colour = random.choice(COLOUR_LIST)  # 随机选择颜色
+            child_level = self.level + 1
+            child = Block(child_position[i], child_size, child_colour, child_level, self.max_depth)
+            self.children.append(child)
+
+            # 决定是否对子方块进行 smash 操作
+            if random.random() < math.exp(-0.25 * child_level):
+                child.smash()  # 递归调用 smash
+            else:
+                child.colour = child_colour  # 如果不进行 smash，则赋予随机颜色
+
+        return True
 
     def swap(self, direction: int) -> bool:
         """Swap the child Blocks of this Block.
