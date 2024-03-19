@@ -50,7 +50,15 @@ def _block_to_squares(board: Block) -> list[tuple[tuple[int, int, int],
     The order of the tuples does not matter.
     """
     # TODO: Implement this function
-    return []  # FIXME
+    squares = []
+    if not board.children:
+        # 如果这个 Block 没有子方块，直接添加它自己的信息
+        squares.append((board.colour, board.position, board.size))
+    else:
+        # 如果这个 Block 有子方块，递归地为每个子方块调用此函数，并将结果添加到 squares 列表中
+        for child in board.children:
+            squares.extend(_block_to_squares(child))
+    return squares
 
 
 def generate_board(max_depth: int, size: int) -> Block:
