@@ -39,7 +39,13 @@ def generate_goals(num_goals: int) -> list[Goal]:
     - num_goals <= len(COLOUR_LIST)
     """
     # TODO: Implement this function
-    return [PerimeterGoal(COLOUR_LIST[0])]  # FIXME
+    chosen_colours = random.sample(COLOUR_LIST, num_goals)  # 随机选择不同的颜色
+    goals = []
+    for colour in chosen_colours:
+        # 随机选择目标类型并创建目标
+        goal_type = random.choice([BlobGoal, PerimeterGoal])
+        goals.append(goal_type(colour))
+    return goals
 
 
 def flatten(block: Block) -> list[list[tuple[int, int, int]]]:
@@ -109,7 +115,7 @@ class PerimeterGoal(Goal):
         """Return a description of this goal.
         """
         # TODO: Implement this method
-        return 'DESCRIPTION'  # FIXME
+        return f"Maximize the placement of {colour_name(self.colour)} blocks on the border. Corner colors will score double points."
 
 
 class BlobGoal(Goal):
@@ -155,7 +161,7 @@ class BlobGoal(Goal):
         """Return a description of this goal.
         """
         # TODO: Implement this method
-        return 'DESCRIPTION'  # FIXME
+        return f"Create as large a {colour_name(self.colour)} colored connected area as possible."
 
 
 if __name__ == '__main__':
