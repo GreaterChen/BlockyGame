@@ -51,12 +51,8 @@ def create_players(num_human: int, num_random: int, smart_players: list[int]) \
 
     Each player is assigned a random goal.
     """
-    # TODO: Implement this function
-    # goals = generate_goals(1)  # FIXME
-    # return [HumanPlayer(0, goals[0])]  # FIXME
-
     total_players = num_human + num_random + len(smart_players)
-    goals = generate_goals(total_players)  # 生成足够多的随机目标
+    goals = generate_goals(total_players)
     players = []
 
     player_id = 0
@@ -68,13 +64,11 @@ def create_players(num_human: int, num_random: int, smart_players: list[int]) \
 
     # 创建 RandomPlayer 对象
     for _ in range(num_random):
-        # 假设 RandomPlayer 已经定义，且有类似于 HumanPlayer 的初始化方法
         players.append(RandomPlayer(player_id, goals.pop(0)))
         player_id += 1
 
     # 创建 SmartPlayer 对象
     for difficulty in smart_players:
-        # 假设 SmartPlayer 已经定义，且可以接受一个难度级别作为参数
         players.append(SmartPlayer(player_id, goals.pop(0), difficulty))
         player_id += 1
 
@@ -99,7 +93,6 @@ def _get_block(block: Block, location: tuple[int, int], level: int) -> \
     Preconditions:
         - block.level <= level <= block.max_depth
     """
-    # TODO: Implement this function
     # 检查给定的位置是否在当前 Block 的范围内
     x, y = location
     top_left_x, top_left_y = block.position
@@ -120,7 +113,6 @@ def _get_block(block: Block, location: tuple[int, int], level: int) -> \
         if result is not None:
             return result
 
-    # 如果没有找到符合条件的子 Block（理论上不应该发生），返回 None
     return None
 
 
@@ -156,7 +148,6 @@ def _find_corresponding_block(original_block: Block, position: tuple[int, int], 
         if result is not None:
             return result
 
-    # 如果没有找到匹配的块，返回 None
     return None
 
 
@@ -327,30 +318,26 @@ class RandomPlayer(ComputerPlayer):
 
         This function does not mutate <board>.
         """
-        # TODO: Implement this method
         if not self._proceed:
-            # 如果不是玩家的回合，不生成移动
             return None
 
         possible_actions = list(KEY_ACTION.values())
         board_copy = board.create_copy()
 
-        # 为了避免修改原始 board，尝试在 board 的副本上应用动作
-        for _ in range(100):  # 限制尝试次数以避免无限循环
+        for _ in range(1000):  # 限制尝试次数以避免无限循环
             action = random.choice(possible_actions)
             target_block = _select_random_block(board_copy)
 
             extra_info = {}
             if action == PAINT:
-                extra_info['colour'] = self.goal.colour  # 假设目标颜色存储在 goal 属性中
+                extra_info['colour'] = self.goal.colour
 
             success = action.apply(target_block, extra_info)
             if success:
                 self._proceed = False  # 动作成功后等待下一次点击
                 original_target_block = _find_corresponding_block(board, target_block.position, target_block.level)
-                return action, original_target_block  # 返回在原始 board 上的动作
+                return action, original_target_block
 
-        # 如果找不到有效动作，返回 None
         return None
 
 
@@ -375,7 +362,6 @@ class SmartPlayer(ComputerPlayer):
         Preconditions:
         - difficulty >= 0
         """
-        # TODO: Implement this method
         super().__init__(player_id, goal)
         self._num_test = difficulty
 
@@ -392,7 +378,6 @@ class SmartPlayer(ComputerPlayer):
 
         This method does not mutate <board>.
         """
-        # TODO: Implement this method
         if not self._proceed:
             return None
 

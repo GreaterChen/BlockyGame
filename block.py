@@ -48,7 +48,6 @@ tuple[int, int], int]]:
 
     The order of the tuples does not matter.
     """
-    # TODO: Implement this function
     squares = []
     if not board.children:
         # 如果这个 Block 没有子方块，直接添加它自己的信息
@@ -229,13 +228,10 @@ class Block:
         <position> is the (x, y) coordinates of the upper-left corner of this
         Block.
         """
-        # TODO: Implement this method
         self.position = position
         if self.children:
-            # 确定子块大小（假设所有子块大小相等）
             child_size = self.child_size()
 
-            # 计算并更新四个子块的位置
             positions = [(position[0] + child_size, position[1]),  # 上右
                          (position[0], position[1]),  # 上左
                          (position[0], position[1] + child_size),  # 下左
@@ -295,17 +291,16 @@ class Block:
         >>> b1.max_depth == max_depth
         True
         """
-        # TODO: Implement this method
         if self.children or self.level >= self.max_depth:
             return False  # 如果已经有子方块或者达到最大深度，则不进行 smash 操作
 
-        self.colour = None  # 清除当前方块的颜色
+        self.colour = None
 
         child_position = self.children_positions()
 
-        for i in range(4):  # 为当前方块生成四个子方块
+        for i in range(4):
             child_size = self.child_size()
-            child_colour = random.choice(COLOUR_LIST)  # 随机选择颜色
+            child_colour = random.choice(COLOUR_LIST)
             child_level = self.level + 1
             child = Block(child_position[i], child_size, child_colour, child_level, self.max_depth)
             self.children.append(child)
@@ -330,7 +325,6 @@ class Block:
         Precondition:
         - <direction> is either (SWAP_VERT, SWAP_HORZ)
         """
-        # TODO: Implement this method
         if not self.children:  # 如果没有子块，不进行交换
             return False
 
@@ -342,11 +336,9 @@ class Block:
 
         if direction == SWAP_HORZ:
             # 水平交换: 计算新位置并更新子块位置
-            # 交换上左(1)与上右(0)，下左(2)与下右(3)
             new_positions = [positions[1], positions[0], positions[3], positions[2]]
         elif direction == SWAP_VERT:
             # 垂直交换: 计算新位置并更新子块位置
-            # 交换上右(0)与下右(3)，上左(1)与下左(2)
             new_positions = [positions[3], positions[2], positions[1], positions[0]]
         else:
             return False
@@ -373,7 +365,6 @@ class Block:
         Preconditions:
         - direction in (ROT_CW, ROT_CCW)
         """
-        # TODO: Implement this method
         if not self.children:  # 没有子块，无需旋转
             return False
 
@@ -385,10 +376,8 @@ class Block:
                      (self.position[0] + child_size, self.position[1] + child_size)]
 
         if direction == ROT_CW:
-            # 顺时针旋转子块位置
             new_positions = [positions[3], positions[0], positions[1], positions[2]]
         elif direction == ROT_CCW:
-            # 逆时针旋转子块位置
             new_positions = [positions[1], positions[2], positions[3], positions[0]]
         else:
             return False
@@ -411,12 +400,11 @@ class Block:
 
         Return True iff this Block's colour was changed.
         """
-        # TODO: Implement this method
         # 检查当前 Block 是否是最深的单元且颜色不同
         if self.level == self.max_depth and self.colour != colour:
-            self.colour = colour  # 改变颜色
-            return True  # 表示颜色已改变
-        return False  # 如果不满足条件，返回 False
+            self.colour = colour
+            return True
+        return False
 
     def combine(self) -> bool:
         """Turn this Block into a leaf based on the majority colour of its
@@ -432,7 +420,6 @@ class Block:
 
         Return True iff this Block was turned into a leaf node.
         """
-        # TODO: Implement this method
         # 检查是否有四个子块且都是叶节点
         if len(self.children) != 4 or any(child.children for child in self.children):
             return False
@@ -445,7 +432,6 @@ class Block:
             else:
                 colour_counts[child.colour] = 1
 
-        # 寻找多数颜色
         max_count = max(colour_counts.values())
         # 检查是否存在多数颜色，且没有并列
         if list(colour_counts.values()).count(max_count) == 1:
@@ -470,12 +456,10 @@ class Block:
         >>> block == copy
         True
         """
-        # TODO: Implement this method
-        if not self.children:  # 如果当前 Block 是叶节点
+        if not self.children:
             # 直接创建并返回一个新的 Block 实例
             return Block(self.position, self.size, self.colour, self.level, self.max_depth)
         else:
-            # 创建一个新的 Block 实例，但暂时不包含子块
             new_block = Block(self.position, self.size, None, self.level, self.max_depth)
             # 递归复制每个子块并添加到新块的子块列表中
             new_block.children = [child.create_copy() for child in self.children]

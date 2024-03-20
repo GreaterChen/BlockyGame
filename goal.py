@@ -38,11 +38,9 @@ def generate_goals(num_goals: int) -> list[Goal]:
     Preconditions:
     - num_goals <= len(COLOUR_LIST)
     """
-    # TODO: Implement this function
-    chosen_colours = random.sample(COLOUR_LIST, num_goals)  # 随机选择不同的颜色
+    chosen_colours = random.sample(COLOUR_LIST, num_goals)
     goals = []
     for colour in chosen_colours:
-        # 随机选择目标类型并创建目标
         goal_type = random.choice([BlobGoal, PerimeterGoal])
         goals.append(goal_type(colour))
     return goals
@@ -62,10 +60,8 @@ def flatten(block: Block) -> list[list[tuple[int, int, int]]]:
 
     L[0][0] represents the unit cell in the upper left corner of the Block.
     """
-    # TODO: Implement this function
     # 计算当前 block 需要生成的二维列表的大小
     size = 2 ** (block.max_depth - block.level)
-    # 如果当前 block 是叶节点，返回一个填充了 block 颜色的二维列表
     if not block.children:
         return [[block.colour for _ in range(size)] for _ in range(size)]
     else:
@@ -132,7 +128,6 @@ class PerimeterGoal(Goal):
         on the perimeter whose colour is this goal's target colour. Corner cells
         count twice toward the score.
         """
-        # TODO: Implement this method
         flattened_board = flatten(board)  # 获取二维颜色表示
         score = 0
         size = len(flattened_board)
@@ -166,7 +161,6 @@ class PerimeterGoal(Goal):
     def description(self) -> str:
         """Return a description of this goal.
         """
-        # TODO: Implement this method
         return f"Maximize the placement of {colour_name(self.colour)} blocks on the border. Corner colors will score double points."
 
 
@@ -183,19 +177,17 @@ class BlobGoal(Goal):
         The score for a BlobGoal is defined to be the total number of
         unit cells in the largest connected blob within this Block.
         """
-        # TODO: Implement this method
-        flattened_board = flatten(board)  # 获取平展后的游戏板
-        max_blob_size = 0  # 初始化最大 blob 大小为 0
-        visited = [[-1 for _ in range(len(flattened_board))] for _ in range(len(flattened_board))]  # 初始化访问结构
+        flattened_board = flatten(board)
+        max_blob_size = 0
+        visited = [[-1 for _ in range(len(flattened_board))] for _ in range(len(flattened_board))]
 
-        # 遍历每个单元格
         for row in range(len(flattened_board)):
             for col in range(len(flattened_board)):
                 if visited[row][col] == -1 and flattened_board[row][col] == self.colour:
                     # 如果单元格未被访问且颜色匹配，则计算 blob 大小
                     blob_size = self._undiscovered_blob_size((row, col), flattened_board, visited)
                     if blob_size > max_blob_size:
-                        max_blob_size = blob_size  # 更新最大 blob 大小
+                        max_blob_size = blob_size
 
         return max_blob_size
 
@@ -220,25 +212,20 @@ class BlobGoal(Goal):
 
         If <pos> is out of bounds for <board>, return 0.
         """
-        # TODO: Implement this method
         row, col = pos
-        # 检查位置是否越界
         if row < 0 or row >= len(board) or col < 0 or col >= len(board[0]):
             return 0
 
-        # 检查当前单元格是否已经访问
         if visited[row][col] != -1:
             return 0
 
-        # 检查当前单元格颜色
         if board[row][col] != self.colour:
             visited[row][col] = 0
             return 0
         else:
-            visited[row][col] = 1  # 标记为已访问且是目标颜色
-            blob_size = 1  # 当前单元格至少为1
+            visited[row][col] = 1
+            blob_size = 1
 
-        # 遍历四个方向的邻居
         directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]
         for d in directions:
             new_pos = (row + d[0], col + d[1])
@@ -249,7 +236,6 @@ class BlobGoal(Goal):
     def description(self) -> str:
         """Return a description of this goal.
         """
-        # TODO: Implement this method
         return f"Create as large a {colour_name(self.colour)} colored connected area as possible."
 
 
