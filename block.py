@@ -230,6 +230,20 @@ class Block:
         Block.
         """
         # TODO: Implement this method
+        self.position = position
+        if self.children:
+            # 确定子块大小（假设所有子块大小相等）
+            child_size = self.child_size()
+
+            # 计算并更新四个子块的位置
+            positions = [(position[0] + child_size, position[1]),  # 上右
+                         (position[0], position[1]),  # 上左
+                         (position[0], position[1] + child_size),  # 下左
+                         (position[0] + child_size, position[1] + child_size)]  # 下右
+
+            for i, child in enumerate(self.children):
+                # 递归更新子块及其后代的位置
+                child._update_children_positions(positions[i])
 
     def smashable(self) -> bool:
         """Return True iff this block can be smashed.
@@ -304,18 +318,6 @@ class Block:
 
         return True
 
-    def swap_child(self, block: Block, dx: int, dy: int) -> bool:
-        """递归更改子块位置，使得子块位置相对于父块位置不变
-
-        Return True iff the swap was performed.
-        """
-        if len(block.children) == 0:
-            return False
-
-        for child in block.children:
-            child.position = (child.position[0] + dx, child.position[1] + dy)
-            self.swap_child(child, dx, dy)
-
     def swap(self, direction: int) -> bool:
         """Swap the child Blocks of this Block.
 
@@ -349,11 +351,8 @@ class Block:
         else:
             return False
 
-        dx = [new_positions[i][0] - positions[i][0] for i in range(4)]
-        dy = [new_positions[i][1] - positions[i][1] for i in range(4)]
         for i, child in enumerate(self.children):
-            child.position = new_positions[i]
-            self.swap_child(child, dx[i], dy[i])
+            child._update_children_positions(new_positions[i])
 
         if direction == SWAP_HORZ:
             self.children = [self.children[1], self.children[0], self.children[3], self.children[2]]
@@ -413,6 +412,11 @@ class Block:
         Return True iff this Block's colour was changed.
         """
         # TODO: Implement this method
+        # 检查当前 Block 是否是最深的单元且颜色不同
+        if self.level == self.max_depth and self.colour != colour:
+            self.colour = colour  # 改变颜色
+            return True  # 表示颜色已改变
+        return False  # 如果不满足条件，返回 False
 
     def combine(self) -> bool:
         """Turn this Block into a leaf based on the majority colour of its
@@ -429,6 +433,30 @@ class Block:
         Return True iff this Block was turned into a leaf node.
         """
         # TODO: Implement this method
+        # 检查是否有四个子块且都是叶节点
+        if len(self.children) != 4 or any(child.children for child in self.children):
+            return False
+
+        # 统计每种颜色的子块数量
+        colour_counts = {}
+        for child in self.children:
+            if child.colour in colour_counts:
+                colour_counts[child.colour] += 1
+            else:
+                colour_counts[child.colour] = 1
+
+        # 寻找多数颜色
+        max_count = max(colour_counts.values())
+        # 检查是否存在多数颜色，且没有并列
+        if list(colour_counts.values()).count(max_count) == 1:
+            for colour, count in colour_counts.items():
+                if count == max_count:
+                    # 更新颜色，移除子块
+                    self.colour = colour
+                    self.children = []
+                    return True
+
+        return False
 
     def create_copy(self) -> Block:
         """Return a new Block that is a deep copy of this Block.
