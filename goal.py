@@ -63,6 +63,30 @@ def flatten(block: Block) -> list[list[tuple[int, int, int]]]:
     L[0][0] represents the unit cell in the upper left corner of the Block.
     """
     # TODO: Implement this function
+    # 计算当前 block 需要生成的二维列表的大小
+    size = 2 ** (block.max_depth - block.level)
+    # 如果当前 block 是叶节点，返回一个填充了 block 颜色的二维列表
+    if not block.children:
+        return [[block.colour for _ in range(size)] for _ in range(size)]
+    else:
+        # 计算每个子块的二维列表，然后将它们组合在一起
+        child_size = size // 2
+        top_left = flatten(block.children[1])
+        top_right = flatten(block.children[0])
+        bottom_left = flatten(block.children[2])
+        bottom_right = flatten(block.children[3])
+
+        # 创建一个新的二维列表来存储组合后的结果
+        new_grid = []
+
+        # 合并上半部分
+        for i in range(child_size):
+            new_grid.append(top_left[i] + top_right[i])
+        # 合并下半部分
+        for i in range(child_size):
+            new_grid.append(bottom_left[i] + bottom_right[i])
+
+        return new_grid
 
 
 class Goal:
@@ -109,7 +133,35 @@ class PerimeterGoal(Goal):
         count twice toward the score.
         """
         # TODO: Implement this method
-        return 148  # FIXME
+        flattened_board = flatten(board)  # 获取二维颜色表示
+        score = 0
+        size = len(flattened_board)
+
+        # 遍历顶部和底部
+        for i in range(size):
+            if flattened_board[0][i] == self.colour:
+                score += 1
+            if flattened_board[size - 1][i] == self.colour:
+                score += 1
+
+        # 遍历左侧和右侧（不包括角落）
+        for i in range(1, size - 1):
+            if flattened_board[i][0] == self.colour:
+                score += 1
+            if flattened_board[i][size - 1] == self.colour:
+                score += 1
+
+        # 角落已经在顶部和底部计数，如果颜色匹配，则这里额外加一
+        if flattened_board[0][0] == self.colour:  # 左上角
+            score += 1
+        if flattened_board[0][size - 1] == self.colour:  # 右上角
+            score += 1
+        if flattened_board[size - 1][0] == self.colour:  # 左下角
+            score += 1
+        if flattened_board[size - 1][size - 1] == self.colour:  # 右下角
+            score += 1
+
+        return score
 
     def description(self) -> str:
         """Return a description of this goal.
