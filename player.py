@@ -124,6 +124,42 @@ def _get_block(block: Block, location: tuple[int, int], level: int) -> \
     return None
 
 
+def _collect_all_blocks(block: Block, blocks: list) -> None:
+    """
+    递归地收集 block 及其所有子块的引用，并将它们添加到 blocks 列表中。
+    """
+    blocks.append(block)
+    for child in block.children:
+        _collect_all_blocks(child, blocks)
+
+
+def _select_random_block(block: Block) -> Block:
+    """
+    从 block 及其所有子块中随机选择一个块并返回。
+    """
+    all_blocks = []
+    _collect_all_blocks(block, all_blocks)
+    return random.choice(all_blocks)
+
+
+def _find_corresponding_block(original_block: Block, position: tuple[int, int], level: int) -> Block | None:
+    """
+    在原始的 Block 树中找到与给定 position 和 level 对应的 Block。
+    """
+    # 如果当前块的 position 和 level 与给定值匹配，返回当前块
+    if original_block.position == position and original_block.level == level:
+        return original_block
+
+    # 如果当前块有子块，递归搜索子块
+    for child in original_block.children:
+        result = _find_corresponding_block(child, position, level)
+        if result is not None:
+            return result
+
+    # 如果没有找到匹配的块，返回 None
+    return None
+
+
 class Player:
     """A player in the Blocky game.
 
@@ -302,7 +338,7 @@ class RandomPlayer(ComputerPlayer):
         # 为了避免修改原始 board，尝试在 board 的副本上应用动作
         for _ in range(100):  # 限制尝试次数以避免无限循环
             action = random.choice(possible_actions)
-            target_block = self._select_random_block(board_copy)
+            target_block = _select_random_block(board_copy)
 
             extra_info = {}
             if action == PAINT:
@@ -311,44 +347,11 @@ class RandomPlayer(ComputerPlayer):
             success = action.apply(target_block, extra_info)
             if success:
                 self._proceed = False  # 动作成功后等待下一次点击
-                original_target_block = self._find_corresponding_block(board, target_block.position, target_block.level)
+                original_target_block = _find_corresponding_block(board, target_block.position, target_block.level)
                 return action, original_target_block  # 返回在原始 board 上的动作
 
         # 如果找不到有效动作，返回 None
         return None
-
-    def _find_corresponding_block(self, original_block: Block, position: tuple[int, int], level: int) -> Block | None:
-        """
-        在原始的 Block 树中找到与给定 position 和 level 对应的 Block。
-        """
-        # 如果当前块的 position 和 level 与给定值匹配，返回当前块
-        if original_block.position == position and original_block.level == level:
-            return original_block
-
-        # 如果当前块有子块，递归搜索子块
-        for child in original_block.children:
-            result = self._find_corresponding_block(child, position, level)
-            if result is not None:
-                return result
-
-        # 如果没有找到匹配的块，返回 None
-        return None
-
-    def _collect_all_blocks(self, block: Block, blocks: list) -> None:
-        """
-        递归地收集 block 及其所有子块的引用，并将它们添加到 blocks 列表中。
-        """
-        blocks.append(block)
-        for child in block.children:
-            self._collect_all_blocks(child, blocks)
-
-    def _select_random_block(self, block: Block) -> Block:
-        """
-        从 block 及其所有子块中随机选择一个块并返回。
-        """
-        all_blocks = []
-        self._collect_all_blocks(block, all_blocks)
-        return random.choice(all_blocks)
 
 
 class SmartPlayer(ComputerPlayer):
@@ -373,6 +376,8 @@ class SmartPlayer(ComputerPlayer):
         - difficulty >= 0
         """
         # TODO: Implement this method
+        super().__init__(player_id, goal)
+        self._num_test = difficulty
 
     def generate_move(self, board: Block) -> \
             tuple[Action, Block] | None:
@@ -388,6 +393,36 @@ class SmartPlayer(ComputerPlayer):
         This method does not mutate <board>.
         """
         # TODO: Implement this method
+        if not self._proceed:
+            return None
+
+        best_score = -float('inf')
+        best_move = None
+        current_score = self.goal.score(board)  # 当前板的得分，用于比较
+
+        for _ in range(self._num_test):
+            action = random.choice(list(KEY_ACTION.values()))  # 随机选择一个动作
+            if action == PASS:  # 排除 PASS 动作
+                continue
+
+            board_copy = board.create_copy()
+            target_block = _select_random_block(board_copy)
+            extra_info = {'colour': self.goal.colour} if action == PAINT else {}
+
+            # 应用动作并评估结果
+            if action.apply(target_block, extra_info):
+                score_after_move = self.goal.score(board_copy) - action.penalty
+                if score_after_move > best_score:
+                    best_score = score_after_move
+                    original_target_block = _find_corresponding_block(board, target_block.position, target_block.level)
+                    best_move = (action, original_target_block)
+
+        # 如果找到的最佳移动比当前得分还要好，返回该移动
+        if best_score > current_score:
+            return best_move
+        else:
+            # 如果没有找到比当前得分更好的移动，执行 PASS
+            return (PASS, board)
 
 
 if __name__ == '__main__':
