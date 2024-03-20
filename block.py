@@ -177,6 +177,7 @@ class Block:
 
             return result
 
+
     def __eq__(self, other: Block) -> bool:
         """Return True iff this Block and all its descendents are equivalent to
         the <other> Block and all its descendents.
@@ -204,7 +205,6 @@ class Block:
             # Because of RIs, don't need to check any attributes other
             # than the children, since will eventually hit base case!
             return self.children == other.children  # elementwise compare
-
     def child_size(self) -> int:
         """Return the size of this Block's children.
         """
@@ -471,6 +471,15 @@ class Block:
         True
         """
         # TODO: Implement this method
+        if not self.children:  # 如果当前 Block 是叶节点
+            # 直接创建并返回一个新的 Block 实例
+            return Block(self.position, self.size, self.colour, self.level, self.max_depth)
+        else:
+            # 创建一个新的 Block 实例，但暂时不包含子块
+            new_block = Block(self.position, self.size, None, self.level, self.max_depth)
+            # 递归复制每个子块并添加到新块的子块列表中
+            new_block.children = [child.create_copy() for child in self.children]
+            return new_block
 
 
 if __name__ == '__main__':

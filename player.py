@@ -66,17 +66,17 @@ def create_players(num_human: int, num_random: int, smart_players: list[int]) \
         players.append(HumanPlayer(player_id, goals.pop(0)))
         player_id += 1
 
-    # # 创建 RandomPlayer 对象
-    # for _ in range(num_random):
-    #     # 假设 RandomPlayer 已经定义，且有类似于 HumanPlayer 的初始化方法
-    #     players.append(RandomPlayer(player_id, goals.pop(0)))
-    #     player_id += 1
-    #
-    # # 创建 SmartPlayer 对象
-    # for difficulty in smart_players:
-    #     # 假设 SmartPlayer 已经定义，且可以接受一个难度级别作为参数
-    #     players.append(SmartPlayer(player_id, goals.pop(0), difficulty))
-    #     player_id += 1
+    # 创建 RandomPlayer 对象
+    for _ in range(num_random):
+        # 假设 RandomPlayer 已经定义，且有类似于 HumanPlayer 的初始化方法
+        players.append(RandomPlayer(player_id, goals.pop(0)))
+        player_id += 1
+
+    # 创建 SmartPlayer 对象
+    for difficulty in smart_players:
+        # 假设 SmartPlayer 已经定义，且可以接受一个难度级别作为参数
+        players.append(SmartPlayer(player_id, goals.pop(0), difficulty))
+        player_id += 1
 
     return players
 
@@ -292,6 +292,63 @@ class RandomPlayer(ComputerPlayer):
         This function does not mutate <board>.
         """
         # TODO: Implement this method
+        if not self._proceed:
+            # 如果不是玩家的回合，不生成移动
+            return None
+
+        possible_actions = list(KEY_ACTION.values())
+        board_copy = board.create_copy()
+
+        # 为了避免修改原始 board，尝试在 board 的副本上应用动作
+        for _ in range(100):  # 限制尝试次数以避免无限循环
+            action = random.choice(possible_actions)
+            target_block = self._select_random_block(board_copy)
+
+            extra_info = {}
+            if action == PAINT:
+                extra_info['colour'] = self.goal.colour  # 假设目标颜色存储在 goal 属性中
+
+            success = action.apply(target_block, extra_info)
+            if success:
+                self._proceed = False  # 动作成功后等待下一次点击
+                original_target_block = self._find_corresponding_block(board, target_block.position, target_block.level)
+                return action, original_target_block  # 返回在原始 board 上的动作
+
+        # 如果找不到有效动作，返回 None
+        return None
+
+    def _find_corresponding_block(self, original_block: Block, position: tuple[int, int], level: int) -> Block | None:
+        """
+        在原始的 Block 树中找到与给定 position 和 level 对应的 Block。
+        """
+        # 如果当前块的 position 和 level 与给定值匹配，返回当前块
+        if original_block.position == position and original_block.level == level:
+            return original_block
+
+        # 如果当前块有子块，递归搜索子块
+        for child in original_block.children:
+            result = self._find_corresponding_block(child, position, level)
+            if result is not None:
+                return result
+
+        # 如果没有找到匹配的块，返回 None
+        return None
+
+    def _collect_all_blocks(self, block: Block, blocks: list) -> None:
+        """
+        递归地收集 block 及其所有子块的引用，并将它们添加到 blocks 列表中。
+        """
+        blocks.append(block)
+        for child in block.children:
+            self._collect_all_blocks(child, blocks)
+
+    def _select_random_block(self, block: Block) -> Block:
+        """
+        从 block 及其所有子块中随机选择一个块并返回。
+        """
+        all_blocks = []
+        self._collect_all_blocks(block, all_blocks)
+        return random.choice(all_blocks)
 
 
 class SmartPlayer(ComputerPlayer):

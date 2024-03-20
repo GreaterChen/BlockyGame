@@ -113,7 +113,7 @@ def create_sample_game() -> Game:
     """Run a sample game with one human player, one random player,
     and one smart player.
     """
-    return Game(3, 2, 1, [6])
+    return Game(3, 1, 1, [])
 
 
 if __name__ == '__main__':
