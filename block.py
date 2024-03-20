@@ -35,8 +35,7 @@ SWAP_VERT = 1
 
 
 def _block_to_squares(board: Block) -> list[tuple[tuple[int, int, int],
-                                                  tuple[int, int], int]]:
-
+tuple[int, int], int]]:
     """Return a list of tuples describing all the squares that must be drawn
     in order to render this Block.
 
@@ -305,6 +304,18 @@ class Block:
 
         return True
 
+    def swap_child(self, block: Block, dx: int, dy: int) -> bool:
+        """递归更改子块位置，使得子块位置相对于父块位置不变
+
+        Return True iff the swap was performed.
+        """
+        if len(block.children) == 0:
+            return False
+
+        for child in block.children:
+            child.position = (child.position[0] + dx, child.position[1] + dy)
+            self.swap_child(child, dx, dy)
+
     def swap(self, direction: int) -> bool:
         """Swap the child Blocks of this Block.
 
@@ -318,6 +329,38 @@ class Block:
         - <direction> is either (SWAP_VERT, SWAP_HORZ)
         """
         # TODO: Implement this method
+        if not self.children:  # 如果没有子块，不进行交换
+            return False
+
+        child_size = self.child_size()
+        positions = [(self.position[0] + child_size, self.position[1]),
+                     self.position,
+                     (self.position[0], self.position[1] + child_size),
+                     (self.position[0] + child_size, self.position[1] + child_size)]
+
+        if direction == SWAP_HORZ:
+            # 水平交换: 计算新位置并更新子块位置
+            # 交换上左(1)与上右(0)，下左(2)与下右(3)
+            new_positions = [positions[1], positions[0], positions[3], positions[2]]
+        elif direction == SWAP_VERT:
+            # 垂直交换: 计算新位置并更新子块位置
+            # 交换上右(0)与下右(3)，上左(1)与下左(2)
+            new_positions = [positions[3], positions[2], positions[1], positions[0]]
+        else:
+            return False
+
+        dx = [new_positions[i][0] - positions[i][0] for i in range(4)]
+        dy = [new_positions[i][1] - positions[i][1] for i in range(4)]
+        for i, child in enumerate(self.children):
+            child.position = new_positions[i]
+            self.swap_child(child, dx[i], dy[i])
+
+        if direction == SWAP_HORZ:
+            self.children = [self.children[1], self.children[0], self.children[3], self.children[2]]
+        elif direction == SWAP_VERT:
+            self.children = [self.children[3], self.children[2], self.children[1], self.children[0]]
+
+        return True
 
     def rotate(self, direction: int) -> bool:
         """Rotate this Block and all its descendents.
@@ -332,6 +375,36 @@ class Block:
         - direction in (ROT_CW, ROT_CCW)
         """
         # TODO: Implement this method
+        if not self.children:  # 没有子块，无需旋转
+            return False
+
+        # 不能直接获取子块的position, 应该以父类为基准重新计算，因为父类可能被移动过
+        child_size = self.child_size()
+        positions = [(self.position[0] + child_size, self.position[1]),
+                     self.position,
+                     (self.position[0], self.position[1] + child_size),
+                     (self.position[0] + child_size, self.position[1] + child_size)]
+
+        if direction == ROT_CW:
+            # 顺时针旋转子块位置
+            new_positions = [positions[3], positions[0], positions[1], positions[2]]
+        elif direction == ROT_CCW:
+            # 逆时针旋转子块位置
+            new_positions = [positions[1], positions[2], positions[3], positions[0]]
+        else:
+            return False
+
+        # 更新子块位置并递归旋转
+        for i, child in enumerate(self.children):
+            child.position = new_positions[i]
+            child.rotate(direction)
+
+        if direction == ROT_CW:
+            self.children = [self.children[1], self.children[2], self.children[3], self.children[0]]
+        elif direction == ROT_CCW:
+            self.children = [self.children[3], self.children[0], self.children[1], self.children[2]]
+
+        return True
 
     def paint(self, colour: tuple[int, int, int]) -> bool:
         """Change this Block's colour iff it is a leaf at a level of max_depth
