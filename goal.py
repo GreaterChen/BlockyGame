@@ -67,8 +67,9 @@ def flatten(block: Block) -> list[list[tuple[int, int, int]]]:
     else:
         # 计算每个子块的二维列表，然后将它们组合在一起
         child_size = size // 2
-        top_left = flatten(block.children[1])
+
         top_right = flatten(block.children[0])
+        top_left = flatten(block.children[1])
         bottom_left = flatten(block.children[2])
         bottom_right = flatten(block.children[3])
 
@@ -76,11 +77,25 @@ def flatten(block: Block) -> list[list[tuple[int, int, int]]]:
         new_grid = []
 
         # 合并上半部分
+        # for i in range(child_size):
+        #     new_grid.append(top_left[i] + top_right[i])
+        # # 合并下半部分
+        # for i in range(child_size):
+        #     new_grid.append(bottom_left[i] + bottom_right[i])
         for i in range(child_size):
-            new_grid.append(top_left[i] + top_right[i])
-        # 合并下半部分
+            new_column = []
+            for j in range(child_size):
+                new_column.append(top_left[i][j])
+            for j in range(child_size):
+                new_column.append(bottom_left[i][j])
+            new_grid.append(new_column)
         for i in range(child_size):
-            new_grid.append(bottom_left[i] + bottom_right[i])
+            new_column = []
+            for j in range(child_size):
+                new_column.append(top_right[i][j])
+            for j in range(child_size):
+                new_column.append(bottom_right[i][j])
+            new_grid.append(new_column)
 
         return new_grid
 
@@ -132,7 +147,10 @@ class PerimeterGoal(Goal):
         score = 0
         size = len(flattened_board)
 
-        # 遍历顶部和底部
+        if size == 1:
+            return 4 if flattened_board[0][0] == self.colour else 0
+
+        # 遍历顶部和底部（不包括角落）
         for i in range(size):
             if flattened_board[0][i] == self.colour:
                 score += 1
