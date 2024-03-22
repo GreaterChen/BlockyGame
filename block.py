@@ -209,6 +209,11 @@ class Block:
         """
         return round(self.size / 2.0)
 
+    def _child_size(self) -> int:
+        """Return the size of this Block's children.
+        """
+        return round(self.size / 2.0)
+
     def children_positions(self) -> list[tuple[int, int]]:
         """Return the (x, y) coordinates of this Block's four children.
 

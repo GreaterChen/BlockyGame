@@ -324,7 +324,7 @@ class RandomPlayer(ComputerPlayer):
         possible_actions = list(KEY_ACTION.values())
         board_copy = board.create_copy()
 
-        for _ in range(1000):  # 限制尝试次数以避免无限循环
+        for _ in range(10000):  # 限制尝试次数以避免无限循环
             action = random.choice(possible_actions)
             target_block = _select_random_block(board_copy)
 

@@ -39,9 +39,9 @@ def generate_goals(num_goals: int) -> list[Goal]:
     - num_goals <= len(COLOUR_LIST)
     """
     chosen_colours = random.sample(COLOUR_LIST, num_goals)
+    goal_type = random.choice([BlobGoal, PerimeterGoal])
     goals = []
     for colour in chosen_colours:
-        goal_type = random.choice([BlobGoal, PerimeterGoal])
         goals.append(goal_type(colour))
     return goals
 
